@@ -1,0 +1,151 @@
+name: Build and Release Service
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**/*.java'
+      - '**/application.properties'
+      - '**/resources/*'
+      - '*.gradle'
+      
+jobs:
+  build:
+    name: Build Service Jar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew bootJar
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-jar
+          path: build/libs/*.jar
+
+        
+
+  prepare_release:
+    name: Prepare release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: write-all
+    outputs:
+      new-tag: ${{ steps.new_version.outputs.NEW_TAG }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: tag_version
+        run: |
+          version=$(grep "version =" build.gradle | cut -d "'" -f2)
+          if [[ -z "$version" ]]; then
+            version=$(git describe --tags --abbrev=0 --match "v*" || echo "v0.0.0")
+          fi
+          echo "TAG=$version" >> $GITHUB_ENV
+
+      - name: Increment version
+        id: new_version
+        run: |
+          latest_tag=${{ env.TAG }}
+          major=$(echo "$latest_tag" | cut -d '.' -f1)
+          minor=$(echo "$latest_tag" | cut -d '.' -f2)
+          patch=$(echo "$latest_tag" | cut -d '.' -f3)
+          if (( patch == 10 )); then
+              patch=0
+              if (( minor == 10 )); then
+                minor=0
+                major=$((major + 1))
+              else
+                minor=$((minor + 1))
+              fi
+          else
+              patch=$((patch + 1))
+          fi
+          new_version="$major.$minor.$patch"
+          echo "NEW_TAG=$new_version" >> $GITHUB_ENV
+          echo "NEW_TAG=$new_version" >> $GITHUB_OUTPUT
+      
+
+      - name: Create and push new tag
+        uses: tvdias/github-tagger@v0.0.1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.NEW_TAG }}
+
+      - name: Update build.gradle
+        run: |
+          new_version=${{ env.NEW_TAG }}
+          sed -i "/version =/c\version = '$new_version'" build.gradle
+
+      - name: Update docker-compose.yml
+        run: |
+          if [ -f docker-compose.yml ]; then
+            repository_name="${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
+            new_jar_name="$repository_name-${{ env.NEW_TAG }}.jar"  # Costruisce il nuovo nome del JAR
+            sed -i'' -e "s|./build/libs/$repository_name-v[0-9]*\.[0-9]*\.[0-9]*\.jar|./build/libs/$new_jar_name|g" docker-compose.yml
+          else
+            echo "docker-compose.yml not found, skipping update."
+          fi
+          
+          
+
+      - name: Commit and push changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add build.gradle
+          if [ -f docker-compose.yml ]; then
+            git add docker-compose.yml
+          fi
+          git commit -m "Update build.gradle & docker-compose to ${{ env.NEW_TAG }}"
+          git push
+
+  release:
+    name: Release Service
+    needs: prepare_release
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: service-jar
+
+      - name: Artifact rename
+        run: |
+          ls -l
+          echo "Renaming artifact jar"
+          mv *.jar ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}-${{  needs.prepare_release.outputs.new-tag }}.jar
+          ls -l
+
+      - name: Creating Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: "${{  needs.prepare_release.outputs.new-tag }}"
+          title: "Release ${{  needs.prepare_release.outputs.new-tag }}"
+          files: |
+            *.jar
