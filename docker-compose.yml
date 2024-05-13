@@ -1,0 +1,42 @@
+services:
+
+  rewards-service:
+    image: openjdk:22-jdk-oracle
+    container_name: rewardsimage
+    ports:
+      - 8083:8080
+      - 8003:8000
+    depends_on:
+      - rewards-db
+    environment:
+      - RABBIT_IP=204.216.223.141
+      - RABBIT_PORT=5672
+      - RABBIT_USER=guest
+      - RABBIT_PASSWORD=guest
+    networks:
+      - greenspot-net
+    volumes:
+      - ./build/libs/rewardsService-v0.0.2.jar:/app/app.jar
+    working_dir: /app
+    entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
+
+  rewards-db:
+    image: mongo:latest
+    container_name: rewardsdb
+    ports:
+      - 27017
+    volumes:
+      - mongo_rewards:/etc/mongo
+      - mongo_rewards_data:/data/db
+      - mongo_rewards_config:/data/configdb
+    networks:
+      - greenspot-net
+
+networks:
+  greenspot-net:
+    name: greenspot_net
+
+volumes:
+  mongo_rewards:
+  mongo_rewards_data:
+  mongo_rewards_config:
