@@ -7,6 +7,7 @@ import it.unisalento.pasproject.rewardsservice.domain.Reward;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemDTO;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemTransactionDTO;
 import it.unisalento.pasproject.rewardsservice.dto.RewardDTO;
+import it.unisalento.pasproject.rewardsservice.dto.RewardNotifyDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -137,6 +138,8 @@ public class RewardService {
     }
 
     public void createWallet(String id) {
-        messageProducer.sendMessage(id, sendRewardDataRoutingKey, dataExchange);
+        RewardNotifyDTO rewardNotifyDTO = new RewardNotifyDTO();
+        rewardNotifyDTO.setRewardId(id);
+        messageProducer.sendMessage(rewardNotifyDTO, sendRewardDataRoutingKey, dataExchange);
     }
 }
