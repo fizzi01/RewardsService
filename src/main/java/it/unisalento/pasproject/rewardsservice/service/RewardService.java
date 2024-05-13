@@ -36,6 +36,13 @@ public class RewardService {
     @Value("${rabbitmq.exchange.transaction.name}")
     private String transactionExchange;
 
+    @Value("${rabbitmq.routing.sendRewardData.key}")
+    private String sendRewardDataRoutingKey;
+
+    @Value("${rabbitmq.exchange.data.name}")
+    private String dataExchange;
+
+
     @Autowired
     public RewardService(MessageProducer messageProducer,@Qualifier("RabbitMQProducer") MessageProducerStrategy messageProducerStrategy, MongoTemplate mongoTemplate) {
         this.messageProducer = messageProducer;
@@ -127,5 +134,9 @@ public class RewardService {
         redeemDTO.setUsed(redeem.isUsed());
         redeemDTO.setUsedDate(redeem.getUsedDate());
         return redeemDTO;
+    }
+
+    public void createWallet(String id) {
+        messageProducer.sendMessage(id, sendRewardDataRoutingKey, dataExchange);
     }
 }

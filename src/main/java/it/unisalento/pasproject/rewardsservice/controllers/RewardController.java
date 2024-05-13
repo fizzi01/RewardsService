@@ -39,6 +39,9 @@ public class RewardController {
 
         reward = rewardRepository.save(reward);
 
+        //Inviare notifica al wallet per aggiungere il reward come wallet per eseguire le transazioni
+        rewardService.createWallet(reward.getId());
+
         rewardDTO.setId(reward.getId());
         return rewardDTO;
     }

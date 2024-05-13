@@ -60,6 +60,23 @@ public class RabbitMQConfig {
                 .with(notifyTransactionRoutingKey);
     }
 
+    // ------  END REDEEM  ------ //
+
+    // ----- WALLET CREATION ----- //
+
+    @Value("${rabbitmq.routing.sendRewardData.key}")
+    private String sendRewardDataRoutingKey;
+
+    @Value("${rabbitmq.exchange.data.name}")
+    private String dataExchange;
+
+    @Bean
+    public TopicExchange dataExchange() {
+        return new TopicExchange(dataExchange);
+    }
+
+
+
 
     /**
      * Creates a message converter for JSON messages.
