@@ -7,6 +7,7 @@ import it.unisalento.pasproject.rewardsservice.domain.Reward;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemDTO;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemTransactionDTO;
 import it.unisalento.pasproject.rewardsservice.dto.RewardDTO;
+import it.unisalento.pasproject.rewardsservice.dto.RewardNotifyDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +54,8 @@ public class RewardService {
     public void sendTransaction(Redeem redeem, Reward rewardEntity) {
         RedeemTransactionDTO transaction = new RedeemTransactionDTO();
         transaction.setSenderEmail(redeem.getUserEmail());
-        transaction.setReceiverEmail(redeem.getRedeemId()); //Inserisco l'id della transazione locale
+        transaction.setReceiverEmail(redeem.getRewardId());
+        transaction.setTransactionOwner(redeem.getRedeemId());    //Inserisco l'id della transazione locale
         transaction.setAmount(redeem.getQuantity()*rewardEntity.getCost());
         transaction.setDescription("Redeem reward "+rewardEntity.getName());
         messageProducer.sendMessage(transaction, sendTransactionRoutingKey, transactionExchange);
@@ -137,6 +139,8 @@ public class RewardService {
     }
 
     public void createWallet(String id) {
-        messageProducer.sendMessage(id, sendRewardDataRoutingKey, dataExchange);
+        RewardNotifyDTO rewardNotifyDTO = new RewardNotifyDTO();
+        rewardNotifyDTO.setId(id);
+        messageProducer.sendMessage(rewardNotifyDTO, sendRewardDataRoutingKey, dataExchange);
     }
 }

@@ -13,6 +13,8 @@ public class RedeemTransactionDTO {
     private double amount;
     private String description;
 
+    private String transactionOwner;
+
     private LocalDateTime creationDate;
     private LocalDateTime completionDate;
 
