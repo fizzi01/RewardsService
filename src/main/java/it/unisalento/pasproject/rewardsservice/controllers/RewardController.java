@@ -6,10 +6,12 @@ import it.unisalento.pasproject.rewardsservice.dto.*;
 import it.unisalento.pasproject.rewardsservice.exceptions.OutOfStockException;
 import it.unisalento.pasproject.rewardsservice.exceptions.RedeemNotFoundException;
 import it.unisalento.pasproject.rewardsservice.exceptions.RewardNotFoundException;
+import it.unisalento.pasproject.rewardsservice.exceptions.WrongUserException;
 import it.unisalento.pasproject.rewardsservice.repositories.RedeemRepository;
 import it.unisalento.pasproject.rewardsservice.repositories.RewardRepository;
 import it.unisalento.pasproject.rewardsservice.service.CreateTransactionSaga;
 import it.unisalento.pasproject.rewardsservice.service.RewardService;
+import it.unisalento.pasproject.rewardsservice.service.UserCheckService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +26,16 @@ public class RewardController {
     private final RewardRepository rewardRepository;
     private final RedeemRepository redeemRepository;
     private final CreateTransactionSaga createTransactionSaga;
+    private final UserCheckService userCheckService;
 
     @Autowired
-    public RewardController(RewardService rewardService, RewardRepository rewardRepository, CreateTransactionSaga createTransactionSaga, RedeemRepository redeemRepository) {
+    public RewardController(RewardService rewardService, RewardRepository rewardRepository, CreateTransactionSaga createTransactionSaga,
+                            RedeemRepository redeemRepository, UserCheckService userCheckService) {
         this.rewardService = rewardService;
         this.rewardRepository = rewardRepository;
         this.createTransactionSaga = createTransactionSaga;
         this.redeemRepository = redeemRepository;
+        this.userCheckService = userCheckService;
     }
 
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -141,8 +146,12 @@ public class RewardController {
     }
 
     @PostMapping(value = "/redeem", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public RedeemRewardDTO redeemReward(@RequestBody RedeemRewardDTO redeemDTO) throws OutOfStockException, RewardNotFoundException {
-       return createTransactionSaga.redeemReward(redeemDTO);
+    public RedeemRewardDTO redeemReward(@RequestBody RedeemRewardDTO redeemDTO) throws OutOfStockException, RewardNotFoundException, WrongUserException {
+        if (!userCheckService.isCorrectUser(redeemDTO.getUserEmail())){
+            throw new WrongUserException("User not correct");
+        }
+
+        return createTransactionSaga.redeemReward(redeemDTO);
     }
 
     @GetMapping(value = "/redeems/{id}")
@@ -165,7 +174,11 @@ public class RewardController {
     }
 
     @GetMapping(value = "/redeems/user/{email}")
-    public ListRedeemDTO getUserRedeems(@PathVariable String email) {
+    public ListRedeemDTO getUserRedeems(@PathVariable String email) throws WrongUserException {
+        if (!userCheckService.isCorrectUser(email)){
+            throw new WrongUserException("User not correct");
+        }
+
         ListRedeemDTO listRedeemDTO = new ListRedeemDTO();
         listRedeemDTO.setRedeems(redeemRepository.findAllByUserEmail(email).stream().map(rewardService::getRedeemDTO).toList());
 
