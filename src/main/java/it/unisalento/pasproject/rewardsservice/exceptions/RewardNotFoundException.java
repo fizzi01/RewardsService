@@ -1,4 +1,9 @@
 package it.unisalento.pasproject.rewardsservice.exceptions;
 
-public class RewardNotFoundException extends Exception{
+import org.springframework.http.HttpStatus;
+
+public class RewardNotFoundException extends CustomErrorException{
+    public RewardNotFoundException(String message) {
+        super(message, HttpStatus.NOT_FOUND);
+    }
 }

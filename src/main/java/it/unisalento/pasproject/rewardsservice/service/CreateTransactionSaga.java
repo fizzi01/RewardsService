@@ -34,13 +34,13 @@ public class CreateTransactionSaga {
     public RedeemRewardDTO redeemReward(RedeemRewardDTO redeemRewardDTO) throws RewardNotFoundException, OutOfStockException {
         Optional<Reward> reward = rewardRepository.findById(redeemRewardDTO.getRewardId());
         if (reward.isEmpty()) {
-            throw new RewardNotFoundException();
+            throw new RewardNotFoundException("Reward not found with id: " + redeemRewardDTO.getRewardId() );
         }
         Reward rewardEntity = reward.get();
 
         //Controlla che il reward sia attivo e che ci siano abbastanza pezzi
         if (!rewardEntity.isActive() || rewardEntity.getQuantity() < redeemRewardDTO.getQuantity())
-            throw new OutOfStockException();
+            throw new OutOfStockException("Reward not available or out of stock");
 
         Redeem redeem = new Redeem();
         redeem.setRewardId(redeemRewardDTO.getRewardId());
@@ -66,7 +66,7 @@ public class CreateTransactionSaga {
         //Aggiorna stato reward
         Optional<Redeem> redeem = redeemRepository.findById(redeemTransactionDTO.getReceiverEmail());
         if (redeem.isEmpty())
-            throw new RedeemNotFoundException();
+            throw new RedeemNotFoundException("Redeem not found with id: " + redeemTransactionDTO.getReceiverEmail());
 
         Redeem redeemEntity = redeem.get();
         redeemEntity.setRedeemed(redeemTransactionDTO.isCompleted());
@@ -83,7 +83,7 @@ public class CreateTransactionSaga {
         //Aggiorna reward
         Optional<Reward> reward = rewardRepository.findById(redeemEntity.getRewardId());
         if (reward.isEmpty())
-            throw new RewardNotFoundException();
+            throw new RewardNotFoundException("Reward not found with id: " + redeemEntity.getRewardId() );
 
         Reward rewardEntity = reward.get();
         rewardEntity.setQuantity(rewardEntity.getQuantity() - redeemEntity.getQuantity());

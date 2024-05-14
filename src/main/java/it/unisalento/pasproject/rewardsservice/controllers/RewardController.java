@@ -50,7 +50,7 @@ public class RewardController {
     public RewardDTO updateReward(@RequestBody RewardDTO rewardDTO) throws RewardNotFoundException {
         Optional<Reward> reward = rewardRepository.findById(rewardDTO.getId());
         if (reward.isEmpty()) {
-           throw new RewardNotFoundException();
+           throw new RewardNotFoundException("Reward not found with id: " + rewardDTO.getId() );
         }
 
         Reward rewardEntity = reward.get();
@@ -76,7 +76,7 @@ public class RewardController {
     public RewardDTO activateReward(@PathVariable String id) throws RewardNotFoundException {
         Optional<Reward> reward = rewardRepository.findById(id);
         if (reward.isEmpty()) {
-            throw new RewardNotFoundException();
+            throw new RewardNotFoundException("Reward not found with id: " + id );
         }
 
         Reward rewardEntity = reward.get();
@@ -91,7 +91,7 @@ public class RewardController {
     public RewardDTO deactivateReward(@PathVariable String id) throws RewardNotFoundException {
         Optional<Reward> reward = rewardRepository.findById(id);
         if (reward.isEmpty()) {
-            throw new RewardNotFoundException();
+            throw new RewardNotFoundException("Reward not found with id: " + id );
         }
 
         Reward rewardEntity = reward.get();
@@ -106,7 +106,7 @@ public class RewardController {
     public RewardDTO getReward(@PathVariable String id) throws RewardNotFoundException {
         Optional<Reward> reward = rewardRepository.findById(id);
         if (reward.isEmpty()) {
-            throw new RewardNotFoundException();
+            throw new RewardNotFoundException("Reward not found with id: " + id);
         }
 
         return rewardService.getRewardDTO(reward.get());
@@ -149,7 +149,7 @@ public class RewardController {
     public RedeemDTO getRedeem(@PathVariable String id) throws RedeemNotFoundException {
         Optional<Redeem> redeem = redeemRepository.findById(id);
         if (redeem.isEmpty()) {
-          throw new RedeemNotFoundException();
+          throw new RedeemNotFoundException("Redeem not found with id: " + id);
         }
 
         return rewardService.getRedeemDTO(redeem.get());

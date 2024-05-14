@@ -1,4 +1,9 @@
 package it.unisalento.pasproject.rewardsservice.exceptions;
 
-public class RedeemNotFoundException extends Exception{
+import org.springframework.http.HttpStatus;
+
+public class RedeemNotFoundException extends CustomErrorException{
+    public RedeemNotFoundException(String message) {
+        super(message, HttpStatus.NOT_FOUND);
+    }
 }
