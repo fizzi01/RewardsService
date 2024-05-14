@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import static it.unisalento.pasproject.rewardsservice.security.SecurityConstants.ROLE_ADMIN;
+
 
 @Service
 public class UserCheckService {
@@ -32,7 +34,12 @@ public class UserCheckService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserCheckService.class);
 
-
+    /**
+     * Load the user details by email
+     * @param email the email of the user
+     * @return the user details
+     * @throws UsernameNotFoundException if the user is not found
+     */
     public UserDetailsDTO loadUserByUsername(String email) throws UsernameNotFoundException {
 
         messageExchanger.setStrategy(messageExchangeStrategy);
@@ -54,8 +61,22 @@ public class UserCheckService {
         return enable;
     }
 
+    /**
+     * Check if the current user is the user with the given email
+     * @param email the email of the user to check
+     * @return true if the current user is the user with the given email, false otherwise
+     */
     public Boolean isCorrectUser(String email){
         return email.equals(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
+    /**
+     * Check if the current user is an administrator
+     * @return true if the current user is an administrator, false otherwise
+     */
+    public Boolean isAdministrator(){
+        String currentRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        return currentRole.equalsIgnoreCase(ROLE_ADMIN);
     }
 
 }

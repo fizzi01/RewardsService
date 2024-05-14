@@ -9,4 +9,8 @@ public class SecurityConstants {
             "XCCpbwzzFrTcKz2bf0ggdCg16t4Hg35I" +
             "g1X3xdGRJQWxjbIjkUKVgnlAj7biLEZt" +
             "rLHcy3Fdfzfd9UvNgXOy6kirjPT3ChGf";
+
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_UTENTE = "UTENTE";
+    public static final String ROLE_MEMBRO = "MEMBRO";
 }
