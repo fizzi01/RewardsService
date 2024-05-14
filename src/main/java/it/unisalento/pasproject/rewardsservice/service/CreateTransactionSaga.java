@@ -64,7 +64,7 @@ public class CreateTransactionSaga {
         //Riceve notifica transazione
         //Aggiorna stato transazione
         //Aggiorna stato reward
-        Optional<Redeem> redeem = redeemRepository.findById(redeemTransactionDTO.getReceiverEmail());
+        Optional<Redeem> redeem = redeemRepository.findById(redeemTransactionDTO.getTransactionOwner());
         if (redeem.isEmpty())
             throw new RedeemNotFoundException("Redeem not found with id: " + redeemTransactionDTO.getReceiverEmail());
 

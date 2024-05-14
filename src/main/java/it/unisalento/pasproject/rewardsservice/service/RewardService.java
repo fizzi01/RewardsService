@@ -54,7 +54,8 @@ public class RewardService {
     public void sendTransaction(Redeem redeem, Reward rewardEntity) {
         RedeemTransactionDTO transaction = new RedeemTransactionDTO();
         transaction.setSenderEmail(redeem.getUserEmail());
-        transaction.setReceiverEmail(redeem.getRedeemId()); //Inserisco l'id della transazione locale
+        transaction.setReceiverEmail(redeem.getRewardId());
+        transaction.setTransactionOwner(redeem.getRedeemId());    //Inserisco l'id della transazione locale
         transaction.setAmount(redeem.getQuantity()*rewardEntity.getCost());
         transaction.setDescription("Redeem reward "+rewardEntity.getName());
         messageProducer.sendMessage(transaction, sendTransactionRoutingKey, transactionExchange);
@@ -139,7 +140,7 @@ public class RewardService {
 
     public void createWallet(String id) {
         RewardNotifyDTO rewardNotifyDTO = new RewardNotifyDTO();
-        rewardNotifyDTO.setRewardId(id);
+        rewardNotifyDTO.setId(id);
         messageProducer.sendMessage(rewardNotifyDTO, sendRewardDataRoutingKey, dataExchange);
     }
 }
