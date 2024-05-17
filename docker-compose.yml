@@ -8,11 +8,8 @@ services:
       - 8003:8000
     depends_on:
       - rewards-db
-    environment:
-      - RABBIT_IP=204.216.223.141
-      - RABBIT_PORT=5672
-      - RABBIT_USER=guest
-      - RABBIT_PASSWORD=guest
+    env_file:
+      - .env
     networks:
       - greenspot-net
     volumes:

@@ -14,7 +14,8 @@ import java.time.OffsetDateTime;
 @Builder
 public class CustomErrorResponse {
     private String traceId;
-    private OffsetDateTime timestamp;
+    private String timestamp;
     private HttpStatus status;
     private String message;
 }
+

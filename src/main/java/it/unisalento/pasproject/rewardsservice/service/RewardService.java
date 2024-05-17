@@ -29,7 +29,7 @@ public class RewardService {
     //Il tutto deve essere asincrono (aspetta si ma va avanti indipedentemente)
 
     private final MessageProducer messageProducer;
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     @Value("${rabbitmq.routing.sendTransaction.name}")
     private String sendTransactionRoutingKey;
