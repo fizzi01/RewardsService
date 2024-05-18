@@ -4,8 +4,8 @@ services:
     image: openjdk:22-jdk-oracle
     container_name: rewardsimage
     ports:
-      - 8083:8080
-      - 8003:8000
+      - "${SERVICE_PORT1}:8080"
+      - "${SERVICE_PORT2}:8000"
     depends_on:
       - rewards-db
     env_file:
@@ -21,7 +21,7 @@ services:
     image: mongo:latest
     container_name: rewardsdb
     ports:
-      - 27017
+      - "${MONGO_PORT}:27017"
     volumes:
       - mongo_rewards:/etc/mongo
       - mongo_rewards_data:/data/db
