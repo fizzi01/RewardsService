@@ -18,7 +18,7 @@ on:
       - '**/application.properties'
       - '**/resources/*'
       - '*.gradle'
-      
+
 jobs:
   build:
     name: Build Service Jar
@@ -46,7 +46,7 @@ jobs:
           name: service-jar
           path: build/libs/*.jar
 
-        
+
 
   prepare_release:
     name: Prepare release
@@ -95,7 +95,7 @@ jobs:
           new_version="$major.$minor.$patch"
           echo "NEW_TAG=$new_version" >> $GITHUB_ENV
           echo "NEW_TAG=$new_version" >> $GITHUB_OUTPUT
-    
+
 
       - name: Update build.gradle
         run: |
@@ -111,7 +111,7 @@ jobs:
           else
             echo "docker-compose.yml not found, skipping update."
           fi
-          
+
 
       - name: Commit and push changes
         run: |
@@ -174,11 +174,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Pull latest changes
+        run: |
+            git pull origin ${{ github.ref_name }}
+
 
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: service-jar
+
+      - name: Artifact rename
+        run: |
+          echo "Renaming artifact jar"
+          mv *.jar ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}-${{  needs.prepare_release.outputs.new-tag }}.jar
 
       - name: Deploy
         run: |
