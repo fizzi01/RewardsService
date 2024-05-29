@@ -1,21 +1,26 @@
 {
-  "template": "#${{CHANGELOG}}\n\n${{RELEASE_DIFF}}\n",
+  "template": "# Changelog\n\n${{CHANGELOG}}\n\n${{RELEASE_DIFF}}\n",
   "categories": [
-    { "title": "� Enhancements", "labels": ["enhancement"] },
-    { "title": "� Bug Fixes", "labels": ["bug"] },
-    { "title": "� Maintenance", "labels": ["chore"] },
-    { "title": "Changes", "labels": [] }
+    { "title": "## 🎉 Enhancements", "labels": ["enhancement"] },
+    { "title": "## ⚒️ Bug Fixes", "labels": ["bug","fixes","fix","fixed"] },
+    { "title": "## Maintenance", "labels": ["chore"] },
+    { "title": "## 🆕 Changes", "labels": [] }
   ],
-  "sort": "ASC",
   "max_tags_to_fetch": 10,
   "max_pull_requests": 50,
   "max_issues": 50,
   "include_unlabeled": true,
-  "transformers": [
+  "label_extractor": [
     {
-      "pattern": "^(.*)$",
+      "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}?: ([\\w ][\\s\\S]*)",
       "target": "$1"
     }
   ],
-  "pr_template": ""
+  "transformers": [
+  {
+    "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}?: ([\\w ][\\s\\S]*)",
+    "target": "- $2"
+  }
+],
+  "commit_template": "- ${{MESSAGE}}\n  ${{BODY}}\n"
 }

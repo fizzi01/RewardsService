@@ -3,13 +3,11 @@ package it.unisalento.pasproject.rewardsservice.controllers;
 import it.unisalento.pasproject.rewardsservice.domain.Redeem;
 import it.unisalento.pasproject.rewardsservice.domain.Reward;
 import it.unisalento.pasproject.rewardsservice.dto.*;
-import it.unisalento.pasproject.rewardsservice.exceptions.OutOfStockException;
-import it.unisalento.pasproject.rewardsservice.exceptions.RedeemNotFoundException;
-import it.unisalento.pasproject.rewardsservice.exceptions.RewardNotFoundException;
-import it.unisalento.pasproject.rewardsservice.exceptions.WrongUserException;
+import it.unisalento.pasproject.rewardsservice.exceptions.*;
 import it.unisalento.pasproject.rewardsservice.repositories.RedeemRepository;
 import it.unisalento.pasproject.rewardsservice.repositories.RewardRepository;
 import it.unisalento.pasproject.rewardsservice.service.CreateTransactionSaga;
+import it.unisalento.pasproject.rewardsservice.service.RedeemService;
 import it.unisalento.pasproject.rewardsservice.service.RewardService;
 import it.unisalento.pasproject.rewardsservice.service.UserCheckService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +29,17 @@ public class RewardController {
     private final RedeemRepository redeemRepository;
     private final CreateTransactionSaga createTransactionSaga;
     private final UserCheckService userCheckService;
+    private final RedeemService redeemService;
 
     @Autowired
     public RewardController(RewardService rewardService, RewardRepository rewardRepository, CreateTransactionSaga createTransactionSaga,
-                            RedeemRepository redeemRepository, UserCheckService userCheckService) {
+                            RedeemRepository redeemRepository, UserCheckService userCheckService, RedeemService redeemService) {
         this.rewardService = rewardService;
         this.rewardRepository = rewardRepository;
         this.createTransactionSaga = createTransactionSaga;
         this.redeemRepository = redeemRepository;
         this.userCheckService = userCheckService;
+        this.redeemService = redeemService;
     }
 
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -116,6 +116,7 @@ public class RewardController {
     }
 
     @GetMapping(value = "/{id}")
+    @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public RewardDTO getReward(@PathVariable String id) throws RewardNotFoundException {
         Optional<Reward> reward = rewardRepository.findById(id);
         if (reward.isEmpty()) {
@@ -126,6 +127,7 @@ public class RewardController {
     }
 
     @GetMapping(value = "/all")
+    @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public ListRewardDTO getAllRewards() {
         ListRewardDTO listRewardDTO = new ListRewardDTO();
         listRewardDTO.setRewards(rewardRepository.findAll().stream().map(rewardService::getRewardDTO).toList());
@@ -134,13 +136,14 @@ public class RewardController {
     }
 
     @GetMapping(value = "/find")
+    @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public ListRewardDTO findRewards(@RequestParam(required = false) String name,
                                      @RequestParam(required = false) String category,
                                      @RequestParam(required = false) String subcategory,
-                                     @RequestParam(required = false) int minQuantity,
-                                     @RequestParam(required = false) int maxQuantity,
-                                     @RequestParam(required = false) int maxSold,
-                                     @RequestParam(required = false) int minSold,
+                                     @RequestParam(required = false) Integer minQuantity,
+                                     @RequestParam(required = false) Integer maxQuantity,
+                                     @RequestParam(required = false) Integer maxSold,
+                                     @RequestParam(required = false) Integer minSold,
                                      @RequestParam(required = false) Boolean active){
         ListRewardDTO listRewardDTO = new ListRewardDTO();
         listRewardDTO.setRewards(rewardService.findRewards(name,
@@ -164,6 +167,7 @@ public class RewardController {
     }
 
     @GetMapping(value = "/redeems/{id}")
+    @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public RedeemDTO getRedeem(@PathVariable String id) throws RedeemNotFoundException {
         Optional<Redeem> redeem = redeemRepository.findById(id);
         if (redeem.isEmpty()) {
@@ -175,6 +179,7 @@ public class RewardController {
     }
 
     @GetMapping(value = "/redeems")
+    @Secured({ROLE_ADMIN})
     public ListRedeemDTO getAllRedeems() {
         ListRedeemDTO listRedeemDTO = new ListRedeemDTO();
         listRedeemDTO.setRedeems(redeemRepository.findAll().stream().map(rewardService::getRedeemDTO).toList());
@@ -196,6 +201,7 @@ public class RewardController {
     }
 
     @GetMapping(value = "/redeems/reward/{id}")
+    @Secured({ROLE_ADMIN})
     public ListRedeemDTO getRewardRedeems(@PathVariable String id) {
         ListRedeemDTO listRedeemDTO = new ListRedeemDTO();
         listRedeemDTO.setRedeems(redeemRepository.findAllByRewardId(id).stream().map(rewardService::getRedeemDTO).toList());
@@ -203,7 +209,31 @@ public class RewardController {
         return listRedeemDTO;
     }
 
-    //TODO: Riscatto codice redeem
+    @PatchMapping(value = "/redeems/use/{redeemCode}")
+    @Secured({ROLE_MEMBRO})
+    public RedeemDTO riscattoRedeemCode(@PathVariable String redeemCode, @RequestBody CompleteRedeemDTO completeRedeemDTO) {
+
+        if (completeRedeemDTO.getRedeemCode() == null || redeemCode == null){
+            throw new RedeemException("Missing redeem code");
+        }
+
+        Redeem redeem = redeemService.useRedeem(redeemCode, completeRedeemDTO.getUserEmail());
+
+        return rewardService.getRedeemDTO(redeem);
+    }
+
+    @PatchMapping(value = "/redeems/use")
+    @Secured({ROLE_MEMBRO})
+    public RedeemDTO riscattoRedeemCode(@RequestBody CompleteRedeemDTO completeRedeemDTO) {
+
+        if (completeRedeemDTO.getRedeemCode() == null){
+            throw new RedeemException("Missing redeem code");
+        }
+
+        Redeem redeem = redeemService.useRedeem(completeRedeemDTO.getRedeemCode(), completeRedeemDTO.getUserEmail());
+
+        return rewardService.getRedeemDTO(redeem);
+    }
 
 
 }

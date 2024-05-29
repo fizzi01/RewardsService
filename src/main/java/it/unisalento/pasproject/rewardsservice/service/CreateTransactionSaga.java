@@ -1,5 +1,6 @@
 package it.unisalento.pasproject.rewardsservice.service;
 
+import it.unisalento.pasproject.rewardsservice.business.reedem.RedeemUtils;
 import it.unisalento.pasproject.rewardsservice.domain.Reward;
 import it.unisalento.pasproject.rewardsservice.domain.Redeem;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemRewardDTO;
@@ -70,7 +71,7 @@ public class CreateTransactionSaga {
 
         Redeem redeemEntity = redeem.get();
         redeemEntity.setRedeemed(redeemTransactionDTO.isCompleted());
-        redeemEntity.setRedeemCode("CODE HERE"); //TODO: Generate univoque code for email
+        redeemEntity.setRedeemCode(RedeemUtils.generateSafeToken());
         redeemEntity.setUsed(false);
         redeemEntity.setUsedDate(null);
 
