@@ -5,6 +5,7 @@ import it.unisalento.pasproject.rewardsservice.domain.Reward;
 import it.unisalento.pasproject.rewardsservice.domain.Redeem;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemRewardDTO;
 import it.unisalento.pasproject.rewardsservice.dto.RedeemTransactionDTO;
+import it.unisalento.pasproject.rewardsservice.exceptions.CustomErrorException;
 import it.unisalento.pasproject.rewardsservice.exceptions.OutOfStockException;
 import it.unisalento.pasproject.rewardsservice.exceptions.RedeemNotFoundException;
 import it.unisalento.pasproject.rewardsservice.exceptions.RewardNotFoundException;
@@ -24,12 +25,14 @@ public class CreateTransactionSaga {
     private final RedeemRepository redeemRepository;
 
     private final RewardService rewardService;
+    private final NotificationMessageHandler notificationHandler;
 
     @Autowired
-    public CreateTransactionSaga(RewardRepository rewardRepository, RewardService rewardService, RedeemRepository redeemRepository) {
+    public CreateTransactionSaga(RewardRepository rewardRepository, RewardService rewardService, RedeemRepository redeemRepository, NotificationMessageHandler notificationHandler) {
         this.rewardRepository = rewardRepository;
         this.rewardService = rewardService;
         this.redeemRepository = redeemRepository;
+        this.notificationHandler = notificationHandler;
     }
 
     public RedeemRewardDTO redeemReward(RedeemRewardDTO redeemRewardDTO) throws RewardNotFoundException, OutOfStockException {
@@ -80,6 +83,16 @@ public class CreateTransactionSaga {
         //Se la transazione non è completata, non aggiornare il reward
         if (!redeemTransactionDTO.isCompleted())
             return;
+
+        //Invia notifica con il codice da riscattere
+        notificationHandler.sendNotificationMessage(NotificationMessageHandler.buildNotificationMessage(
+                redeemEntity.getUserEmail(), // receiver
+                "Your redeem code is: " + redeemEntity.getRedeemCode(), // message
+                "Redeem Code", // subject
+                NotificationConstants.CONFIRMATION_NOTIFICATION_TYPE, // type
+                true, // email
+                false  // notification
+        ));
 
         //Aggiorna reward
         Optional<Reward> reward = rewardRepository.findById(redeemEntity.getRewardId());
