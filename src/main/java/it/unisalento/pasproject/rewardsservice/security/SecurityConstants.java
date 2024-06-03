@@ -1,6 +1,9 @@
 package it.unisalento.pasproject.rewardsservice.security;
 
 public class SecurityConstants {
+
+    private SecurityConstants() {}
+
     public static final String JWT_SECRET = "QGgjfe56Lenuir3nsLnuSa8X9WazGRmh" +
             "dQ28u7l5FwKieig8mUG4AkpAetrYrjzB" +
             "K0Rslh8KuQmJnzPGOi1wq00YgS1KBx6F" +

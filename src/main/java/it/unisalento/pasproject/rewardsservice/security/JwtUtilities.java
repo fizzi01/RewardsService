@@ -24,6 +24,10 @@ public class JwtUtilities {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
@@ -46,8 +50,9 @@ public class JwtUtilities {
     }
 
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean validateToken(String token, UserDetails userDetails, String role) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        final String tokenRole = extractRole(token);
+        return (username.equals(userDetails.getUsername()) && tokenRole.equalsIgnoreCase(role)  && !isTokenExpired(token));
     }
 }

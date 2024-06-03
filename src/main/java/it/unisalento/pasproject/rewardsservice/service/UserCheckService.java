@@ -45,13 +45,17 @@ public class UserCheckService {
     public UserDetailsDTO loadUserByUsername(String email) throws UsernameNotFoundException {
 
         //Chiamata MQTT a CQRS per ottenere i dettagli dell'utente
-        UserDetailsDTO user = messageExchanger.exchangeMessage(email,securityRequestRoutingKey,securityExchange,UserDetailsDTO.class);
+        UserDetailsDTO user = null;
 
-        if(user == null) {
-            throw new UsernameNotFoundException(email);
+        try {
+            user = messageExchanger.exchangeMessage(email,securityRequestRoutingKey,securityExchange,UserDetailsDTO.class);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
 
-        LOGGER.info(String.format("User %s found with role: %s and enabled %s", user.getEmail(), user.getRole(), user.getEnabled()));
+        if(user != null) {
+            LOGGER.info(String.format("User %s found with role: %s and enabled %s", user.getEmail(), user.getRole(), user.getEnabled()));
+        }
 
         return user;
     }
