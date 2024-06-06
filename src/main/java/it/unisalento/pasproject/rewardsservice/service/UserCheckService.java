@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -53,10 +54,6 @@ public class UserCheckService {
             LOGGER.error(e.getMessage());
         }
 
-        if(user != null) {
-            LOGGER.info(String.format("User %s found with role: %s and enabled %s", user.getEmail(), user.getRole(), user.getEnabled()));
-        }
-
         return user;
     }
 
@@ -72,6 +69,14 @@ public class UserCheckService {
      */
     public Boolean isCorrectUser(String email){
         return email.equals(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
+    /**
+     * Get the email of the current user
+     * @return the email of the current user
+     */
+    public String getCurrentUserEmail(){
+        return ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
     }
 
     /**
