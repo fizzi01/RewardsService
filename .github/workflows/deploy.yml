@@ -11,10 +11,11 @@ on:
         description: 'Forced build'
   push:
     branches:
-      - main
       - master
+      - main
     paths:
       - '/*.java'
+      - '**/*.java'
       - '/application.properties'
       - '/resources/*'
       - '*.gradle'
