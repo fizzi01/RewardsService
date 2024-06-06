@@ -42,6 +42,11 @@ public class RewardController {
         this.redeemService = redeemService;
     }
 
+    /**
+     * Crea un reward
+     * @param rewardDTO DTO del reward da creare
+     * @return DTO del reward creato
+     */
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Secured({ROLE_ADMIN})
     public RewardDTO createReward(@RequestBody RewardDTO rewardDTO) {
