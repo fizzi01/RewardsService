@@ -159,6 +159,15 @@ public class RewardController {
     @PostMapping(value = "/redeem", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Secured({ROLE_MEMBRO})
     public RedeemRewardDTO redeemReward(@RequestBody RedeemRewardDTO redeemDTO) throws OutOfStockException, RewardNotFoundException, WrongUserException {
+
+        String userEmail = redeemDTO.getUserEmail();
+
+        // Fallback: if userEmail is null, get the current session user email (as it should be)
+        if(userEmail == null){
+            userEmail = userCheckService.getCurrentUserEmail();
+            redeemDTO.setUserEmail(userEmail);
+        }
+
         if (!userCheckService.isCorrectUser(redeemDTO.getUserEmail())){
             throw new WrongUserException("User not correct");
         }
@@ -170,8 +179,14 @@ public class RewardController {
     @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public RedeemDTO getRedeem(@PathVariable String id) throws RedeemNotFoundException {
         Optional<Redeem> redeem = redeemRepository.findById(id);
+
         if (redeem.isEmpty()) {
           throw new RedeemNotFoundException("Redeem not found with id: " + id);
+        }
+
+        //Se ROLE_MEMBRO controllo che l'utente sia il proprietario del riscatto, se ROLE_ADMIN non controllo
+        if (!userCheckService.isCorrectUser(redeem.get().getUserEmail()) && !userCheckService.isAdministrator()){
+            throw new WrongUserException("User not correct");
         }
 
         return rewardService.getRedeemDTO(redeem.get());
@@ -187,10 +202,22 @@ public class RewardController {
         return listRedeemDTO;
     }
 
+    /**
+     * Restituisce tutti i riscatti di un utente
+     * @param email email dell'utente (se null, prende l'utente corrente)
+     * @return lista di riscatti
+     */
     @GetMapping(value = "/redeems/user/{email}")
-    @Secured({ROLE_MEMBRO})
-    public ListRedeemDTO getUserRedeems(@PathVariable String email) throws WrongUserException {
-        if (!userCheckService.isCorrectUser(email)){
+    @Secured({ROLE_ADMIN,ROLE_MEMBRO})
+    public ListRedeemDTO getUserRedeems(@PathVariable(required = false) String email) throws WrongUserException {
+
+        // Fallback: if email is null, get the current session user email (as it should be)
+        if(email == null){
+            email = userCheckService.getCurrentUserEmail();
+        }
+
+        //il ROLE_ADMIN può vedere i riscatti di tutti, il ROLE_MEMBRO solo i propri
+        if (!userCheckService.isCorrectUser(email) && !userCheckService.isAdministrator()){
             throw new WrongUserException("User not correct");
         }
 
@@ -200,6 +227,11 @@ public class RewardController {
         return listRedeemDTO;
     }
 
+    /**
+     * Restituisce tutti i riscatti di un reward
+     * @param id id del reward
+     * @return lista di riscatti
+     */
     @GetMapping(value = "/redeems/reward/{id}")
     @Secured({ROLE_ADMIN})
     public ListRedeemDTO getRewardRedeems(@PathVariable String id) {
@@ -209,15 +241,20 @@ public class RewardController {
         return listRedeemDTO;
     }
 
+    /**
+     * Riscatta un redeem code appartenente all'utente che esegue la richiesta
+     * @param redeemCode redeem code da riscattare
+     * @return resoconto del riscatto
+     */
     @PatchMapping(value = "/redeems/use/{redeemCode}")
     @Secured({ROLE_MEMBRO})
-    public RedeemDTO riscattoRedeemCode(@PathVariable String redeemCode, @RequestBody CompleteRedeemDTO completeRedeemDTO) {
+    public RedeemDTO riscattoRedeemCode(@PathVariable String redeemCode) {
 
-        if (completeRedeemDTO.getRedeemCode() == null || redeemCode == null){
+        if ( redeemCode == null){
             throw new RedeemException("Missing redeem code");
         }
 
-        Redeem redeem = redeemService.useRedeem(redeemCode, completeRedeemDTO.getUserEmail());
+        Redeem redeem = redeemService.useRedeem(redeemCode, userCheckService.getCurrentUserEmail());
 
         return rewardService.getRedeemDTO(redeem);
     }
@@ -228,6 +265,11 @@ public class RewardController {
 
         if (completeRedeemDTO.getRedeemCode() == null){
             throw new RedeemException("Missing redeem code");
+        }
+
+        //Verifica che l'utente sia il proprietario del riscatto
+        if (!userCheckService.isCorrectUser(completeRedeemDTO.getUserEmail())){
+            throw new WrongUserException("User not correct");
         }
 
         Redeem redeem = redeemService.useRedeem(completeRedeemDTO.getRedeemCode(), completeRedeemDTO.getUserEmail());
