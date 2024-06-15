@@ -11,6 +11,8 @@ import it.unisalento.pasproject.rewardsservice.exceptions.RedeemNotFoundExceptio
 import it.unisalento.pasproject.rewardsservice.exceptions.RewardNotFoundException;
 import it.unisalento.pasproject.rewardsservice.repositories.RedeemRepository;
 import it.unisalento.pasproject.rewardsservice.repositories.RewardRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ public class CreateTransactionSaga {
 
     private final RewardService rewardService;
     private final NotificationMessageHandler notificationHandler;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateTransactionSaga.class);
 
     @Autowired
     public CreateTransactionSaga(RewardRepository rewardRepository, RewardService rewardService, RedeemRepository redeemRepository, NotificationMessageHandler notificationHandler) {
@@ -68,44 +72,47 @@ public class CreateTransactionSaga {
         //Riceve notifica transazione
         //Aggiorna stato transazione
         //Aggiorna stato reward
-        Optional<Redeem> redeem = redeemRepository.findById(redeemTransactionDTO.getTransactionOwner());
-        if (redeem.isEmpty())
-            throw new RedeemNotFoundException("Redeem not found with id: " + redeemTransactionDTO.getReceiverEmail());
+        try {
+            Optional<Redeem> redeem = redeemRepository.findById(redeemTransactionDTO.getTransactionOwner());
+            if (redeem.isEmpty())
+                throw new RedeemNotFoundException("Redeem not found with id: " + redeemTransactionDTO.getReceiverEmail());
 
-        Redeem redeemEntity = redeem.get();
-        redeemEntity.setRedeemed(redeemTransactionDTO.isCompleted());
-        redeemEntity.setRedeemCode(RedeemUtils.generateSafeToken());
-        redeemEntity.setUsed(false);
-        redeemEntity.setUsedDate(null);
+            Redeem redeemEntity = redeem.get();
+            redeemEntity.setRedeemed(redeemTransactionDTO.isCompleted());
+            redeemEntity.setRedeemCode(RedeemUtils.generateSafeToken());
+            redeemEntity.setUsed(false);
+            redeemEntity.setUsedDate(null);
 
-        redeemRepository.save(redeemEntity);
+            redeemRepository.save(redeemEntity);
 
-        //Se la transazione non è completata, non aggiornare il reward
-        if (!redeemTransactionDTO.isCompleted())
-            return;
+            //Se la transazione non è completata, non aggiornare il reward
+            if (!redeemTransactionDTO.isCompleted())
+                return;
 
-        //Invia notifica con il codice da riscattere
-        notificationHandler.sendNotificationMessage(NotificationMessageHandler.buildNotificationMessage(
-                redeemEntity.getUserEmail(), // receiver
-                "Your redeem code is: " + redeemEntity.getRedeemCode(), // message
-                "Redeem Code", // subject
-                NotificationConstants.CONFIRMATION_NOTIFICATION_TYPE, // type
-                true, // email
-                false  // notification
-        ));
+            //Invia notifica con il codice da riscattere
+            notificationHandler.sendNotificationMessage(NotificationMessageHandler.buildNotificationMessage(
+                    redeemEntity.getUserEmail(), // receiver
+                    "Your redeem code is: " + redeemEntity.getRedeemCode(), // message
+                    "Redeem Code", // subject
+                    NotificationConstants.CONFIRMATION_NOTIFICATION_TYPE, // type
+                    true, // email
+                    false  // notification
+            ));
 
-        //Aggiorna reward
-        Optional<Reward> reward = rewardRepository.findById(redeemEntity.getRewardId());
-        if (reward.isEmpty())
-            throw new RewardNotFoundException("Reward not found with id: " + redeemEntity.getRewardId() );
+            //Aggiorna reward
+            Optional<Reward> reward = rewardRepository.findById(redeemEntity.getRewardId());
+            if (reward.isEmpty())
+                throw new RewardNotFoundException("Reward not found with id: " + redeemEntity.getRewardId());
 
-        Reward rewardEntity = reward.get();
-        rewardEntity.setQuantity(rewardEntity.getQuantity() - redeemEntity.getQuantity());
-        if (rewardEntity.getQuantity() == 0)
-            rewardEntity.setActive(false);
-        rewardEntity.setSold(rewardEntity.getSold() + redeemEntity.getQuantity());
+            Reward rewardEntity = reward.get();
+            rewardEntity.setQuantity(rewardEntity.getQuantity() - redeemEntity.getQuantity());
+            if (rewardEntity.getQuantity() == 0)
+                rewardEntity.setActive(false);
+            rewardEntity.setSold(rewardEntity.getSold() + redeemEntity.getQuantity());
 
-        rewardRepository.save(rewardEntity);
-
+            rewardRepository.save(rewardEntity);
+        } catch (Exception e) {
+            LOGGER.error("Transaction notification error.");
+        }
     }
 }
