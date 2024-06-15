@@ -13,7 +13,7 @@ services:
     networks:
       - greenspot-net
     volumes:
-      - ./build/libs/RewardsService-v1.0.9.jar:/app/app.jar
+      - ./build/libs/RewardsService-v1.0.10.jar:/app/app.jar
     working_dir: /app
     entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
 
