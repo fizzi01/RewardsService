@@ -14,11 +14,15 @@ public class Reward {
     @Id
     private String id;
     private String name;
+
     private double cost;
+    private double oldCost;
+
     private String description;
     private String image;
     private String category;
     private String subcategory;
+
     private LocalDateTime addDate;
     private boolean active;
     private int quantity;

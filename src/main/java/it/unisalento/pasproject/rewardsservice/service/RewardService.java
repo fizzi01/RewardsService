@@ -65,6 +65,7 @@ public class RewardService {
         Reward reward = new Reward();
         reward.setName(rewardDTO.getName());
         reward.setCost(rewardDTO.getCost());
+        reward.setOldCost(rewardDTO.getOldCost());
         reward.setDescription(rewardDTO.getDescription());
         reward.setImage(rewardDTO.getImage());
         reward.setCategory(rewardDTO.getCategory());
@@ -81,6 +82,7 @@ public class RewardService {
         rewardDTO.setId(reward.getId());
         rewardDTO.setName(reward.getName());
         rewardDTO.setCost(reward.getCost());
+        rewardDTO.setOldCost(reward.getOldCost());
         rewardDTO.setDescription(reward.getDescription());
         rewardDTO.setImage(reward.getImage());
         rewardDTO.setCategory(reward.getCategory());

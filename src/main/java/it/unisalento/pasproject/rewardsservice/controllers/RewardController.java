@@ -70,6 +70,11 @@ public class RewardController {
         }
 
         Reward rewardEntity = reward.get();
+        if(rewardDTO.getOldCost() == 0){
+            rewardEntity.setOldCost(rewardEntity.getCost());
+        } else {
+            rewardEntity.setOldCost(rewardDTO.getOldCost());
+        }
         Optional.ofNullable(rewardDTO.getName()).ifPresent(rewardEntity::setName);
         Optional.of(rewardDTO.getCost()).ifPresent(rewardEntity::setCost);
         Optional.ofNullable(rewardDTO.getDescription()).ifPresent(rewardEntity::setDescription);
@@ -82,6 +87,7 @@ public class RewardController {
         Optional.of(rewardDTO.isActive()).ifPresent(rewardEntity::setActive);
         Optional.of(rewardDTO.getQuantity()).ifPresent(rewardEntity::setQuantity);
         //Optional.of(rewardDTO.getSold()).ifPresent(rewardEntity::setSold); Solo il sistema può modificare sold
+
 
         rewardRepository.save(rewardEntity);
 
@@ -135,7 +141,11 @@ public class RewardController {
     @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public ListRewardDTO getAllRewards() {
         ListRewardDTO listRewardDTO = new ListRewardDTO();
-        listRewardDTO.setRewards(rewardRepository.findAll().stream().map(rewardService::getRewardDTO).toList());
+        if(userCheckService.isAdministrator()) {
+            listRewardDTO.setRewards(rewardRepository.findAll().stream().map(rewardService::getRewardDTO).toList());
+        } else { // For members, only active rewards are shown
+            listRewardDTO.setRewards(rewardRepository.findAllByActive(true).stream().map(rewardService::getRewardDTO).toList());
+        }
 
         return listRewardDTO;
     }

@@ -11,6 +11,7 @@ public class RewardDTO {
     private String id;
     private String name;
     private double cost;
+    private double oldCost;
     private String description;
     private String image;
     private String category;
