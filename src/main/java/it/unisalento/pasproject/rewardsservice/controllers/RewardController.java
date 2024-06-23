@@ -52,6 +52,10 @@ public class RewardController {
     public RewardDTO createReward(@RequestBody RewardDTO rewardDTO) {
         Reward reward = rewardService.getReward(rewardDTO);
 
+        if( rewardDTO.getAddDate() == null){
+            reward.setAddDate(LocalDateTime.now());
+        }
+
         reward = rewardRepository.save(reward);
 
         //Inviare notifica al wallet per aggiungere il reward come wallet per eseguire le transazioni
