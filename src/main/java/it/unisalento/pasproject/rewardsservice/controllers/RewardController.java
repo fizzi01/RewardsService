@@ -86,8 +86,6 @@ public class RewardController {
         Optional.ofNullable(rewardDTO.getCategory()).ifPresent(rewardEntity::setCategory);
         Optional.ofNullable(rewardDTO.getSubcategory()).ifPresent(rewardEntity::setSubcategory);
 
-        rewardEntity.setAddDate(LocalDateTime.now());
-
         Optional.of(rewardDTO.isActive()).ifPresent(rewardEntity::setActive);
         Optional.of(rewardDTO.getQuantity()).ifPresent(rewardEntity::setQuantity);
         //Optional.of(rewardDTO.getSold()).ifPresent(rewardEntity::setSold); Solo il sistema può modificare sold
