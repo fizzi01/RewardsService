@@ -74,17 +74,14 @@ public class RewardController {
         }
 
         Reward rewardEntity = reward.get();
-        if(rewardDTO.getOldCost() == 0){
-            rewardEntity.setOldCost(rewardEntity.getCost());
-        } else {
-            rewardEntity.setOldCost(rewardDTO.getOldCost());
-        }
+
         Optional.ofNullable(rewardDTO.getName()).ifPresent(rewardEntity::setName);
         Optional.of(rewardDTO.getCost()).ifPresent(rewardEntity::setCost);
         Optional.ofNullable(rewardDTO.getDescription()).ifPresent(rewardEntity::setDescription);
         Optional.ofNullable(rewardDTO.getImage()).ifPresent(rewardEntity::setImage);
         Optional.ofNullable(rewardDTO.getCategory()).ifPresent(rewardEntity::setCategory);
         Optional.ofNullable(rewardDTO.getSubcategory()).ifPresent(rewardEntity::setSubcategory);
+        Optional.of(rewardDTO.getOldCost()).ifPresent(rewardEntity::setOldCost);
 
         Optional.of(rewardDTO.isActive()).ifPresent(rewardEntity::setActive);
         Optional.of(rewardDTO.getQuantity()).ifPresent(rewardEntity::setQuantity);
