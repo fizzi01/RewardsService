@@ -35,6 +35,11 @@ public class RedeemService {
             throw new RedeemException("Redeem not found");
         }
 
+        //Se data di riscatto è presente e redeemed è false, allora la transazione non è stata completata
+        if(redeem.getRedeemDate() != null && !redeem.isRedeemed()){
+            throw new RedeemException("Invalid redeem code");
+        }
+
         if(redeem.isUsed()){
             throw new RedeemException("Redeem already used");
         }
