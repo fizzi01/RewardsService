@@ -54,7 +54,7 @@ public class CreateTransactionSaga {
         redeem.setRewardId(redeemRewardDTO.getRewardId());
         redeem.setUserEmail(redeemRewardDTO.getUserEmail());
         redeem.setQuantity(redeemRewardDTO.getQuantity());
-        redeem.setRedeemDate(LocalDateTime.now());
+        //Redeem date is set when transaction is completed, while null is pending
         redeem.setRedeemed(false); //Wait for transaction
 
         redeem = redeemRepository.save(redeem);
@@ -78,10 +78,15 @@ public class CreateTransactionSaga {
                 throw new RedeemNotFoundException("Redeem not found with id: " + redeemTransactionDTO.getReceiverEmail());
 
             Redeem redeemEntity = redeem.get();
+            redeemEntity.setRedeemDate(LocalDateTime.now());
             redeemEntity.setRedeemed(redeemTransactionDTO.isCompleted());
-            redeemEntity.setRedeemCode(RedeemUtils.generateSafeToken());
-            redeemEntity.setUsed(false);
-            redeemEntity.setUsedDate(null);
+            // if redeem date is set but transaction is not completed, TRANSACTION FAILED!
+            // if redeem date is set, and transaction is completed, generate redeem code
+            if(redeemTransactionDTO.isCompleted()) {
+                redeemEntity.setRedeemCode(RedeemUtils.generateSafeToken());
+                redeemEntity.setUsed(false);
+                redeemEntity.setUsedDate(null);
+            }
 
             redeemRepository.save(redeemEntity);
 
