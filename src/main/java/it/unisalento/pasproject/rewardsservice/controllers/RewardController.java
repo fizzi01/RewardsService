@@ -182,8 +182,12 @@ public class RewardController {
             redeemDTO.setUserEmail(userEmail);
         }
 
+        if(redeemDTO.getQuantity() <= 0 || redeemDTO.getRedeemId() == null){
+            throw new RedeemException("Invalid request.");
+        }
+
         if (!userCheckService.isCorrectUser(redeemDTO.getUserEmail())){
-            throw new WrongUserException("User not correct");
+            throw new WrongUserException("User not correct.");
         }
 
         return createTransactionSaga.redeemReward(redeemDTO);
