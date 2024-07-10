@@ -125,6 +125,19 @@ public class RewardController {
         return rewardService.getRewardDTO(rewardEntity);
     }
 
+    @DeleteMapping(value = "/delete/{id}")
+    @Secured({ROLE_ADMIN})
+    public RewardDTO deleteReward(@PathVariable String id) throws RewardNotFoundException {
+        Optional<Reward> reward = rewardRepository.findById(id);
+        if (reward.isEmpty()) {
+            throw new RewardNotFoundException("Reward not found with id: " + id);
+        }
+
+        rewardRepository.delete(reward.get());
+
+        return rewardService.getRewardDTO(reward.get());
+    }
+
     @GetMapping(value = "/{id}")
     @Secured({ROLE_ADMIN, ROLE_MEMBRO})
     public RewardDTO getReward(@PathVariable String id) throws RewardNotFoundException {
