@@ -76,7 +76,7 @@ public class UserCheckService {
      * @return the email of the current user
      */
     public String getCurrentUserEmail(){
-        return ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     /**
