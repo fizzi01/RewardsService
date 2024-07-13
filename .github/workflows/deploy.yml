@@ -49,6 +49,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Start test chain
+        run: ./gradlew test
+
+
       - name: Build with Gradle
         run: ./gradlew bootJar
 
