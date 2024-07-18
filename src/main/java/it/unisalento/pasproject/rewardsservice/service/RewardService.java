@@ -16,7 +16,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RewardService {
@@ -96,6 +98,7 @@ public class RewardService {
 
     public List<Reward> findRewards(String name, String category, String subcategory, int maxQuantity, int maxSold, int minQuantity, int minSold, Boolean active) {
         Query query = new Query();
+
         if (name != null) {
             query.addCriteria(Criteria.where("name").is(name));
         }
@@ -105,22 +108,40 @@ public class RewardService {
         if (subcategory != null) {
             query.addCriteria(Criteria.where("subcategory").is(subcategory));
         }
-        if (active != null) {
-            query.addCriteria(Criteria.where("active").is(active));
-        } else {
-            query.addCriteria(Criteria.where("active").is(true));
+
+        query.addCriteria(Criteria.where("active").is(Objects.requireNonNullElse(active, true)));
+
+        List<Criteria> andCriteria = new ArrayList<>();
+
+        // Assuming minQuantity and maxQuantity have been defined
+        if (minQuantity >= 0 || maxQuantity >= 0) {
+            List<Criteria> quantityCriteria = new ArrayList<>();
+            if (minQuantity >= 0) {
+                quantityCriteria.add(Criteria.where("quantity").gte(minQuantity));
+            }
+            if (maxQuantity >= 0) {
+                quantityCriteria.add(Criteria.where("quantity").lte(maxQuantity));
+            }
+            // Combine quantity criteria with $and if both conditions exist
+            andCriteria.add(new Criteria().andOperator(quantityCriteria.toArray(new Criteria[0])));
         }
-        if (minQuantity >= 0) {
-            query.addCriteria(Criteria.where("quantity").gte(minQuantity));
+
+        // Assuming minSold and maxSold have been defined
+        if (minSold >= 0 || maxSold >= 0) {
+            List<Criteria> soldCriteria = new ArrayList<>();
+            if (minSold >= 0) {
+                soldCriteria.add(Criteria.where("sold").gte(minSold));
+            }
+            if (maxSold >= 0) {
+                soldCriteria.add(Criteria.where("sold").lte(maxSold));
+            }
+            // Combine sold criteria with $and if both conditions exist
+            andCriteria.add(new Criteria().andOperator(soldCriteria.toArray(new Criteria[0])));
         }
-        if (maxQuantity >= 0) {
-            query.addCriteria(Criteria.where("quantity").lte(maxQuantity));
-        }
-        if (minSold >= 0) {
-            query.addCriteria(Criteria.where("sold").gte(minSold));
-        }
-        if (maxSold >= 0) {
-            query.addCriteria(Criteria.where("sold").lte(maxSold));
+
+        // Apply combined andCriteria to the query
+        if (!andCriteria.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(andCriteria.toArray(new Criteria[andCriteria.size()])));
         }
 
         return mongoTemplate.find(query, Reward.class);
