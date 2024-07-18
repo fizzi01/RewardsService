@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.adarshr.test-logger' version "4.0.0"
+    id 'jacoco'
 }
 
 group = 'it.unisalento.pasproject'
@@ -16,6 +17,32 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+}
+
+test {
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/configuration/*",
+                    "**/domain/*",
+                    "**/dto/*",
+                    "**/io/*",
+                    "**/security/*",
+                    "**/config/*"
+            ])
+        }))
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+    reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
 }
 
 repositories {
@@ -34,6 +61,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.amqp:spring-rabbit-test'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring30x:4.11.0'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5',
